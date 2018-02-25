@@ -1,1 +1,7 @@
-Root : root attempted to provide an access to sajjad1 to a restricted table CLIENTroot: Grant of access to CLIENT by sajjad1 is unacceptable Root : root attempted to provide an access to sajjad1 to a restricted table CLIENT
+Root : root attempted to provide an access to sajjad1 to a restricted table CLIENTroot: Grant of access to CLIENT by sajjad1 is unacceptable Root : root attempted to provide an access to sajjad1 to a restricted table CLIENTroot:  Grant of access to CLIENT by sajjad1 is unacceptable 
+Root :  attempted to provide an access to sajjad1 to a restricted table CLIENT
+root:  Grant of access to CLIENT by sajjad1 is unacceptable 
+Root :  attempted to provide an access to sajjad1 to a restricted table CLIENT
+root: There is no such grant defined for user 'vijay2' on host 'localhost'
+vijay: Grant of access to CLIENT by sajjad1 is unacceptable
+Root : Attempted to provide an access to sajjad1 to a restricted table CLIENT
