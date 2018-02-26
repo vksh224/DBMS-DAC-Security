@@ -25,3 +25,15 @@ root: SUCCESS!! User Marek added to the database
 root: SUCCESS!! User Dexter added to the database
 root: SUCCESS!! User Baxter added to the database
 Marek: SUCCESS!! New table design created
+root: SUCCESS!! User vijay added to the database
+root: SUCCESS!! Entry for Dexter for DESIGN is successfully deleted from FORBIDDEN
+vijay: CREATE command denied to user 'vijay'@'localhost' for table 'client'
+root: SUCCESS!! User vijay removed from the database
+root: SUCCESS!! Entry for vijay for dummy is successfully added to FORBIDDEN
+root: SUCCESS!! User vijay added to the database
+root: SUCCESS!! User vijay removed from the database
+root: SUCCESS!! User vijay added to the database
+root: SUCCESS!! User vijay removed from the database
+root: SUCCESS!! User vijay added to the database
+root: Unread result found
+root: Unread result found
