@@ -1,7 +1,7 @@
 import mysql.connector
 from Log import *
 
-def CREATE_NEW_USER(cursor, host, newUser, newPasswd):
+def CREATE_NEW_USER(cursor, host, newUser, newPasswd, grantOption):
 
     try:
         # CREATE USER
@@ -13,23 +13,11 @@ def CREATE_NEW_USER(cursor, host, newUser, newPasswd):
 
         # GIVE GRANT ACCESS TO CURRENTLY ADDED USER EXCEPT FORBIDDEN TABLE
         try:
-            # print(" I am here: ")
-            granting = "GRANT ALL ON dbmsProject.* TO '%s'@'%s'" % (newUser, host)
-            print("GRANTING: " + granting)
+            granting = "GRANT ALL ON dbmsProject.* TO '%s'@'%s' WITH GRANT OPTION" % (newUser, host)
             cursor.execute(granting)
-            granting = "GRANT SELECT ON dbmsProject.FORBIDDEN TO '%s'@'%s'" % (newUser, host)
-            print("GRANTING: " + granting)
-            cursor.execute(granting)
+
         except mysql.connector.Error as e:
             print( e.msg)
-
-        # # REVOKE ACCESS TO FORBIDDEN
-        # try:
-        #     granting = "REVOKE ALL PRIVILEGES ON dbmsProject.FORBIDDEN FROM '%s'@'%s' " % (newUser, host)
-        #     print("REVOKE: " + granting)
-        #     cursor.execute(granting)
-        # except mysql.connector.Error as e:
-        #     print(e.msg)
 
         msg = "SUCCESS!! User " + str(newUser) + " added to the database"
         print("root: " + msg)
@@ -69,16 +57,17 @@ def SHOW_ALL_USERS(cursor):
         Log("root: ", e.msg)
 
 
-def CREATE_TABLE(cursor, currUser, tableName):
+def CREATE_TABLE(mydb, cursor, currUser, tableName):
     try:
-        query = "CREATE TABLE IF NOT EXISTS %s(uID INT AUTO_INCREMENT PRIMARY KEY, clientName TEXT NOT NULL)" % (tableName)
-        cursor.execute(query)
+        createTableQ = "CREATE TABLE IF NOT EXISTS %s(uID INT AUTO_INCREMENT PRIMARY KEY, clientName TEXT NOT NULL)" % (tableName)
+        cursor.execute(createTableQ)
         # GIVE GRANT ACCESS TO CURRENTLY ADDED USER EXCEPT FORBIDDEN TABLE
         try:
-            # print(" I am here: ")
-            granting = "GRANT ALL PRIVILEGES ON dbmsProject.%s TO '%s'@'localhost'" % (tableName, currUser)
-            print("GRANTING: " + granting)
-            cursor.execute(granting)
+            #granting = "GRANT ALL PRIVILEGES ON dbmsProject.%s TO '%s'@'localhost'" % (tableName, currUser)
+            insertAssignedQ = "INSERT INTO ASSIGNED(uID, userName, tableName, grantBit) VALUES(NULL, '%s', '%s', 1) "%(currUser, tableName)
+            print("GRANTING: " + insertAssignedQ)
+            cursor.execute(insertAssignedQ)
+            mydb.commit()
         except mysql.connector.Error as e:
             print(e.msg)
 
@@ -107,6 +96,21 @@ def SHOW_FORBIDDEN(cursor):
         print(e.msg)
         Log("root ", e.msg)
 
+def SHOW_TABLE(cursor, tableName, userName):
+    try:
+        query = "SELECT * FROM %s" %(tableName)
+        cursor.execute(query)
+        # print("ENTRIES \n" )
+
+        i = 1
+        for row in cursor:
+            #row = cursor.fetchone()
+            print ("Entry: " + str(i) + " ", row)
+            i = i + 1
+
+    except mysql.connector.Error as e:
+        print(e.msg)
+        Log(userName, e.msg)
 
 def CHECK_IF_USER_EXISTS(cursor, tableName, userName):
     try:
@@ -121,7 +125,7 @@ def CHECK_IF_USER_EXISTS(cursor, tableName, userName):
     return results[0]
 
 
-def GRANT_ALL(cursor, currUser, tableName, userName, host, grantOption):
+def GRANT_ALL(mydb, cursor, currUser, tableName, userName, host, grantOption):
     # Check if user is in the FORBIDDEN
     rowCount = CHECK_IF_USER_EXISTS(cursor, tableName, userName)
 
@@ -140,31 +144,49 @@ def GRANT_ALL(cursor, currUser, tableName, userName, host, grantOption):
     else:
         # print ("Check access table now")
         try:
-            query = "SHOW GRANTS FOR '%s'@'%s'" % (currUser, host)
-            print ("QUERY: " + str(query))
-            cursor.execute(query)
-            results = cursor.fetchone()
-            print ("RESULTS: " + results[0])
+            queryAssigned = "SELECT * FROM ASSIGNED where userName = '%s' and tablename = '%s'" % (currUser, tableName)
+            # print ("QUERY: " + str(queryAssigned))
+            result = cursor.execute(queryAssigned)
+            grantBit = cursor.fetchone()
+            # print("Grant bit is: " + str(grantBit))
+
+            if '0' in str(grantBit):
+                msg = " does not have GRANT OPTION"
+                print (currUser + msg)
+                Log(currUser, msg)
+
+            else:
+                try:
+                    checkQuery = "SELECT grantBit FROM ASSIGNED where userName = '%s' and tableName ='%s'" % (userName, tableName)
+                    cursor.execute(checkQuery)
+                    result = cursor.fetchone()
+                    print ("Result here is: " + str(result))
+                    # Handle changes to ASSIGNED table
+                    if result != None :
+                        #print(str(str(result).find('0')) +" " + str(grantOption))
+                        if str(result).find('0') > -1 and grantOption == 1:
+                            #print("UPDATE TABLE")
+                            UPDATE_TABLE(mydb, cursor, currUser, userName, tableName)
+                        else:
+                            print("Something is wrong")
+                    else:
+                        print("INSERT ASSIGNED")
+                        INSERT_INTO_ASSIGNED(mydb, cursor, currUser, userName, tableName, grantOption)
+
+                except mysql.connector.Error as e:
+                    print(e.msg)
+                    Log("root", e.msg)
+
+                # Make an entry in ACCESS table
+                INSERT_INTO_ACCESS(mydb, cursor, currUser, userName, tableName, grantOption)
+
+                msgToCurrUser = "SUCCESS!! GRANTED ACCESS TO TABLE " + str(tableName) + " by USER: " + str(userName)
+                print(str(currUser) + ": " + msgToCurrUser)
+                Log(currUser, msgToCurrUser)
 
         except mysql.connector.Error as e:
             print (str(currUser) + " : " + e.msg)
             Log(currUser, e.msg)
-
-        if "ALL" in results[0]:
-            try:
-                if grantOption == 'Y' or grantOption == 'y':
-                    granting = "GRANT ALL PRIVILEGES ON dbmsProject.%s TO '%s'@'%s' WITH GRANT OPTION" % (tableName, userName, host)
-                else:
-                    granting = "GRANT ALL PRIVILEGES ON dbmsProject.%s TO '%s'@'%s'" % (tableName, userName, host)
-                print(granting)
-                cursor.execute(granting)
-                msgToCurrUser = "SUCCESS!! GRANTED ACCESS TO TABLE" + str(tableName) + " by USER: " + str(userName)
-                print(str(currUser) + ": " + msgToCurrUser)
-                Log(currUser, msgToCurrUser)
-
-            except mysql.connector.Error as e:
-                print(str(currUser) + " : " + e.msg)
-                Log(currUser, e.msg)
 
 def REVOKE_ALL(cursor, tableName, newUser, host):
     try:
@@ -199,3 +221,67 @@ def DELETE_USER_FROM_FORBIDDEN(mydb, cursor, userName, tableName):
         print(e.msg)
         Log("root", e.msg)
 
+
+def INSERT_INTO_ASSIGNED(mydb, cursor, currUser, userName, tableName, grantOption):
+    try:
+        query ="INSERT INTO ASSIGNED VALUES(NULL, '%s', '%s', %s)" %(userName, tableName, grantOption)
+        cursor.execute(query)
+        msg = " SUCCESS!! Entry for " + str(userName) + " for " + str(tableName) + " is successfully added to ASSIGNED"
+        print(currUser + msg)
+        Log(currUser, msg)
+        mydb.commit()
+
+    except mysql.connector.Error as e:
+        print("root " + " Error - INSERT ASSIGNED "  + e.msg)
+        Log("root", " Error - INSERT ASSIGNED "  + e.msg)
+
+def DELETE_USER_FROM_ASSIGNED(mydb, cursor, currUser, userName, tableName):
+    try:
+        query = "DELETE FROM ASSIGNED where userName ='%s' and tableName = '%s'" % (userName, tableName)
+        cursor.execute(query)
+        msg = " SUCCESS!! Entry for " + str(userName) + " for " + str(tableName) + " is successfully deleted from ASSIGNED"
+        print(currUser + msg)
+        Log(currUser, msg)
+        mydb.commit()
+    except mysql.connector.Error as e:
+        print(currUser, " Error -  DELETE ASSIGNED " + e.msg)
+        Log(currUser, " Error - DELETE ASSIGNED " + e.msg)
+
+def INSERT_INTO_ACCESS(mydb, cursor, grantor, grantee, tableName, grantOption):
+    try:
+        query ="INSERT INTO ACCESS VALUES(NULL, '%s', '%s', '%s', %s)" %(grantor, grantee, tableName, grantOption)
+        print("QUERY " + query)
+        cursor.execute(query)
+        msg = "SUCCESS!! " + str(grantor) + " gave access to " + str(tableName) + " " + str(grantee) +" with GRANT OPTION " + str(grantOption)
+        print(msg)
+        Log(grantor, msg)
+        mydb.commit()
+    except mysql.connector.Error as e:
+        print(grantor + " : Error - INSERT ACCESS "  + e.msg)
+        Log("root",  " : Error - INSERT ACCESS "  + e.msg)
+
+def DELETE_USER_FROM_ACCESS(mydb, cursor, currUser, userName, tableName):
+    try:
+        query = "DELETE FROM ASSIGNED where userName ='%s' and tableName = '%s'" % (userName, tableName)
+        cursor.execute(query)
+        msg = " SUCCESS!! Entry for " + str(userName) + " for " + str(tableName) + " is successfully deleted from ASSIGNED"
+        print(currUser + msg)
+        Log(currUser, msg)
+        mydb.commit()
+
+    except mysql.connector.Error as e:
+        print(currUser + " : Error - DELETE ACCESS " + e.msg)
+        Log(currUser, " : Error - DELETE ACCESS " + e.msg)
+
+def UPDATE_TABLE(mydb, cursor, currUser, userName, tableName):
+    try:
+        query = "UPDATE ASSIGNED SET grantBit = '1' where userName = '%s' and tableName = '%s'" % (
+            userName, tableName)
+        cursor.execute(query)
+        msg = " SUCCESS!! User: " + currUser + " updated table "  + tableName + " for user " + userName
+        print(currUser + msg)
+        Log(currUser, msg)
+        mydb.commit()
+    except mysql.connector.Error as e:
+        print(currUser +" : Error - UPDATE " + e.msg)
+        Log(currUser, " : Error - UPDATE " + e.msg)

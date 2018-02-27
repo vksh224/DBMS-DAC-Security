@@ -86,8 +86,8 @@ try:
                 print(" \n ===  GRANT ALL PRIVILEGES ==== \n")
                 userName = input("User name: ")
                 tableName = input("Table name: ")
-                grantOption = input("grant option? (1/0) ")
-                GRANT_ALL(mydb, cursor, userV, tableName, userName, hostV, grantOption)
+                grantOption = input("grant option? (Y/N) ")
+                GRANT_ALL(cursor, userV, tableName, userName, hostV, grantOption)
                 print("======== END =========== \n")
 
             elif inputV == 'REVOKE' or inputV == 'revoke':
@@ -138,52 +138,5 @@ try:
 
             else:
                 print("Wrong input, please try again: \n")
-
-    # IF OTHER USER
-    else:
-        print("============ MENU ================ ")
-        print("1. GRANT PERMISSION")
-        print("2. REVOKE PERMISSION")
-        print("3. CREATE TABLE")
-        print("4. SHOW  A CERTAIN TABLE ")
-        print("5. Exit")
-
-        while (1):
-            inputV = input("Command: ")
-
-            if inputV == 'GRANT' or inputV == 'grant':
-                print(" \n ===  GRANT ALL PRIVILEGES ==== \n")
-                userName = input("User name: ")
-                tableName = input("Table name: ")
-                grantOption = int(input("grant option? (1/0) "))
-                GRANT_ALL(mydb, cursor, userV, tableName, userName, hostV, grantOption)
-                print("======== END =========== \n")
-
-            elif inputV == 'REVOKE' or inputV == 'revoke':
-                print(" \n ===  REVOKE ALL PRIVILEGES ==== \n")
-                userName = input("User name: ")
-                tableName = input("Table name: ")
-                REVOKE_ALL(cursor, userName, tableName)
-                print("======== END =========== \n")
-
-            elif inputV == 'CREATE' or inputV == 'create':
-                print(" \n === CREATE A NEW TABLE ==== \n")
-                tableName = input("Table name: ")
-                CREATE_TABLE(mydb, cursor, userV, tableName)
-                print("======== END =========== \n")
-
-            elif (inputV == 'SHOW TABLE' or inputV == 'show table' or inputV== 'show T'):
-                print(" \n === SHOW TABLE ==== \n")
-                tableName = input("Table name: ")
-                SHOW_TABLE(cursor, tableName, userV)
-                print("======== END =========== \n")
-
-
-            elif inputV == 'EXIT' or inputV == 'exit':
-                break
-
-            else:
-                print("Wrong input, please try again: \n")
-
 except mysql.connector.Error as e:
     print(e.msg)
