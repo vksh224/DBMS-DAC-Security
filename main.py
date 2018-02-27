@@ -79,6 +79,7 @@ try:
         print("8. SHOW FORBIDDEN")
         print("9. Exit \n")
 
+        firstAttempt = 0
         while (1):
             inputV = input("Command: ")
 
@@ -100,7 +101,8 @@ try:
             elif inputV == 'ADD' or inputV == 'add':
                 userName = input("User name: ")
                 tableName = input("Table name: ")
-                INSERT_INTO_FORBIDDEN(mydb, cursor, userName, tableName)
+                firstAttempt = firstAttempt + 1
+                INSERT_INTO_FORBIDDEN(mydb, cursor, userName, tableName, firstAttempt)
 
             elif inputV == 'DELETE' or inputV == 'delete':
                 print(" \n ===  DELETE USER FROM FORBIDDEN ==== \n")

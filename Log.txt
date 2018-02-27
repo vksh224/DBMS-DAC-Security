@@ -123,3 +123,18 @@ Dexter:  SUCCESS!! Entry for Vijay for CLIENT is successfully added to ASSIGNED
 Dexter: SUCCESS!! Dexter gave access to CLIENT Vijay with GRANT OPTION 0
 Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Vijay
 Baxter:  does not have GRANT OPTION
+root: SUCCESS!! Entry for Baxter for CLIENT is successfully added to FORBIDDEN
+Marek: Grant of access to CLIENT by Baxter is unacceptable
+Root : Attempted to provide an access to Baxter to a restricted table CLIENT
+root: Inserting (Dexter ,  Forbidden) may result in disruption of operations
+root: SUCCESS!! Entry for Dummy for CLIENT is successfully added to FORBIDDEN
+Marek: Grant of access to CLIENT by Baxter is unacceptable
+Root : Attempted to provide an access to Baxter to a restricted table CLIENT
+Marek: Grant of access to CLIENT by Dummy is unacceptable
+Root : Attempted to provide an access to Dummy to a restricted table CLIENT
+Marek:  SUCCESS!! Entry for Dummy2 for CLIENT is successfully added to ASSIGNED
+Marek: SUCCESS!! Marek gave access to CLIENT Dummy2 with GRANT OPTION 1
+Marek: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Dummy2
+Marek:  SUCCESS!! User: Marek updated table CLIENT for user Vijay
+Marek: SUCCESS!! Marek gave access to CLIENT Vijay with GRANT OPTION 1
+Marek: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Vijay

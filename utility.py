@@ -112,9 +112,9 @@ def SHOW_TABLE(cursor, tableName, userName):
         print(e.msg)
         Log(userName, e.msg)
 
-def CHECK_IF_USER_EXISTS(cursor, tableName, userName):
+def CHECK_IF_USER_EXISTS(cursor, extantTable, tableName, userName):
     try:
-        query = "SELECT count(*) FROM FORBIDDEN where userName = '%s' and tableName = '%s'" %(userName, tableName)
+        query = "SELECT count(*) FROM %s where userName = '%s' and tableName = '%s'" %(extantTable, userName, tableName)
         cursor.execute(query)
         results = cursor.fetchone()
         # print (query)
@@ -127,7 +127,7 @@ def CHECK_IF_USER_EXISTS(cursor, tableName, userName):
 
 def GRANT_ALL(mydb, cursor, currUser, tableName, userName, host, grantOption):
     # Check if user is in the FORBIDDEN
-    rowCount = CHECK_IF_USER_EXISTS(cursor, tableName, userName)
+    rowCount = CHECK_IF_USER_EXISTS(cursor, "FORBIDDEN", tableName, userName)
 
     if rowCount > 1: #Multiple entries
         msgToCurrUser = "Something is wrong. Contact Security Officer to resolve the issue."
@@ -197,17 +197,32 @@ def REVOKE_ALL(cursor, tableName, newUser, host):
     except mysql.connector.Error as e:
         print(e.msg)
 
-def INSERT_INTO_FORBIDDEN(mydb, cursor, userName, tableName):
-    try:
-        query ="INSERT INTO FORBIDDEN VALUES(NULL, '%s', '%s')" %(userName, tableName)
-        cursor.execute(query)
-        msg = "SUCCESS!! Entry for " + str(userName) + " for " + str(tableName) + " is successfully added to FORBIDDEN"
-        print("root : " + msg)
-        Log("root", msg)
-        mydb.commit()
-    except mysql.connector.Error as e:
-        print(e.msg)
-        Log("root", e.msg)
+def INSERT_INTO_FORBIDDEN(mydb, cursor, userName, tableName, firstAttempt):
+    rowCount = CHECK_IF_USER_EXISTS(cursor, "ASSIGNED", tableName, userName)
+
+    if rowCount > 1:  # Multiple entries
+        msgToCurrUser = "Something is wrong. Contact Security Officer to resolve the issue."
+        print(msgToCurrUser)
+        Log("root ", msgToCurrUser)
+
+    elif rowCount == 0:
+        try:
+            query ="INSERT INTO FORBIDDEN VALUES(NULL, '%s', '%s')" %(userName, tableName)
+            cursor.execute(query)
+            msg = "SUCCESS!! Entry for " + str(userName) + " for " + str(tableName) + " is successfully added to FORBIDDEN"
+            print("root : " + msg)
+            Log("root", msg)
+            mydb.commit()
+        except mysql.connector.Error as e:
+            print(e.msg)
+            Log("root", e.msg)
+    else:
+        if firstAttempt == 1:
+            msg = "Inserting (" + str(userName) + " , " +  " Forbidden) may result in disruption of operations"
+            print("root: "  + msg)
+            Log("root", msg)
+        else:
+            print ("Revoke subsequent grants")
 
 def DELETE_USER_FROM_FORBIDDEN(mydb, cursor, userName, tableName):
     try:
