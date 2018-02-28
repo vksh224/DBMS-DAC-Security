@@ -28,7 +28,7 @@ databaseV = "dbmsProject"
 userV = input("Username: ")
 passwdV = input("Password: ")
 
-print("=========== Welcome " + str(userV) + "==============")
+print("============= Welcome " + str(userV) + " ==============")
 
 try:
     mydb = mysql.connector.connect(host=hostV, user=userV, passwd=passwdV, database=databaseV)
@@ -95,7 +95,7 @@ try:
                 print(" \n ===  REVOKE ALL PRIVILEGES ==== \n")
                 userName = input("User name: ")
                 tableName = input("Table name: ")
-                REVOKE_ALL(mydb, cursor, userV, userName, tableName)
+                REVOKE_ALL(mydb, cursor, userName, tableName)
                 print("======== END =========== \n")
 
             elif inputV == 'ADD' or inputV == 'add':

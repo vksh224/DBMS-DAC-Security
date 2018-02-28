@@ -170,3 +170,19 @@ root: Unread result found
 Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
 root: Unread result found
 Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+Dexter:  : Error - UPDATE Unread result found
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+Dexter:  : Error - UPDATE Unread result found
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+Dexter:  : Error - UPDATE ASSIGN Unread result found
+Dexter:  SUCCESS!! Entry for Sajjad for CLIENT is successfully added to ASSIGNED
+Dexter:  SUCCESS!! User: Dexter updated ASSIGNED table CLIENT for user Sajjad
+Dexter:  SUCCESS!! User: Dexter updated ASSIGNED table CLIENT for user Sajjad
+Dexter:  SUCCESS!! Entry for Sajjad for CLIENT is successfully added to ASSIGNED
+Dexter: SUCCESS!! Dexter gave access to CLIENT Sajjad with GRANT OPTION 0
+Dexter:  SUCCESS!! User: Dexter updated ASSIGNED table CLIENT for user Sajjad
+Dexter:  SUCCESS!! User: Dexter updated ACCESS table CLIENT for user Sajjad
+Dexter:  SUCCESS!! User: Dexter updated ASSIGNED table CLIENT for user Sajjad
+Dexter:  SUCCESS!! User: Dexter updated ACCESS table CLIENT for user Sajjad
