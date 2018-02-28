@@ -95,7 +95,7 @@ try:
                 print(" \n ===  REVOKE ALL PRIVILEGES ==== \n")
                 userName = input("User name: ")
                 tableName = input("Table name: ")
-                REVOKE_ALL(cursor, userName, tableName)
+                REVOKE_ALL(mydb, cursor, userV, userName, tableName)
                 print("======== END =========== \n")
 
             elif inputV == 'ADD' or inputV == 'add':
@@ -165,7 +165,7 @@ try:
                 print(" \n ===  REVOKE ALL PRIVILEGES ==== \n")
                 userName = input("User name: ")
                 tableName = input("Table name: ")
-                REVOKE_ALL(cursor, userName, tableName)
+                REVOKE_ALL(mydb, cursor, userV, userName, tableName)
                 print("======== END =========== \n")
 
             elif inputV == 'CREATE' or inputV == 'create':

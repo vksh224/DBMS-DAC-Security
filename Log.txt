@@ -138,3 +138,35 @@ Marek: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Dummy2
 Marek:  SUCCESS!! User: Marek updated table CLIENT for user Vijay
 Marek: SUCCESS!! Marek gave access to CLIENT Vijay with GRANT OPTION 1
 Marek: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Vijay
+root: : You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'Marek',)' and tableName = 'Dexter'' at line 1
+Vijay:  SUCCESS!! Entry for Sajjad for CLIENT is successfully added to ASSIGNED
+Vijay: SUCCESS!! Vijay gave access to CLIENT Sajjad with GRANT OPTION 1
+Vijay: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+Dexter: SUCCESS!! Dexter gave access to CLIENT Vijay with GRANT OPTION 1
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Vijay
+Dexter:  SUCCESS!! User: Dexter updated ACCESS table CLIENT for user Vijay
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Vijay
+Dexter: Grant of access to CLIENT by Baxter is unacceptable
+Root : Attempted to provide an access to Baxter to a restricted table CLIENT
+Dexter: Grant of access to CLIENT by Baxter is unacceptable
+Root : Attempted to provide an access to Baxter to a restricted table CLIENT
+Dexter:  SUCCESS!! Entry for Sajjad for CLIENT is successfully added to ASSIGNED
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad
+root: Unread result found
+Dexter: SUCCESS!! GRANTED ACCESS TO TABLE CLIENT by USER: Sajjad

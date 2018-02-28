@@ -156,29 +156,51 @@ def GRANT_ALL(mydb, cursor, currUser, tableName, userName, host, grantOption):
                 Log(currUser, msg)
 
             else:
+
                 try:
                     checkQuery = "SELECT grantBit FROM ASSIGNED where userName = '%s' and tableName ='%s'" % (userName, tableName)
                     cursor.execute(checkQuery)
                     result = cursor.fetchone()
-                    print ("Result here is: " + str(result))
+                    print ("1: Result here is: " + str(result))
                     # Handle changes to ASSIGNED table
-                    if result != None :
+                    if result is not None :
                         #print(str(str(result).find('0')) +" " + str(grantOption))
                         if str(result).find('0') > -1 and grantOption == 1:
                             #print("UPDATE TABLE")
-                            UPDATE_TABLE(mydb, cursor, currUser, userName, tableName)
+                            UPDATE_ASSIGNED_TABLE(mydb, cursor, currUser, userName, tableName)
                         else:
-                            print("Something is wrong")
+                            print("Someone already gave grant option.")
                     else:
                         print("INSERT ASSIGNED")
                         INSERT_INTO_ASSIGNED(mydb, cursor, currUser, userName, tableName, grantOption)
 
                 except mysql.connector.Error as e:
-                    print(e.msg)
+                    print("ASSIGNED " + e.msg)
                     Log("root", e.msg)
 
-                # Make an entry in ACCESS table
-                INSERT_INTO_ACCESS(mydb, cursor, currUser, userName, tableName, grantOption)
+                try:
+                    checkQuery2 = "SELECT * FROM ACCESS where grantorName = '%s' and granteeName = '%s' and tableName ='%s'" % (
+                    currUser, userName, tableName)
+                    print("Query: " + checkQuery2)
+                    cursor.execute(checkQuery2)
+                    result2 = cursor.fetchone()
+                    print("2: Result here is: ", result2)
+
+                    # Handle changes to ASSIGNED table
+                    # if result is not None:
+                    #     # print(str(str(result).find('0')) +" " + str(grantOption))
+                    #     if str(result).find('0') > -1 and grantOption == 1:
+                    #         # print("UPDATE TABLE")
+                    #         UPDATE_ACCESS_TABLE(mydb, cursor, currUser, userName, tableName)
+                    #     else:
+                    #         print("No need to update again. Someone already gave GRANT OPTION.")
+                    # else:
+                    #     print("INSERT ASSIGNED")
+                    #     INSERT_INTO_ASSIGNED(mydb, cursor, currUser, userName, tableName, grantOption)
+
+                except mysql.connector.Error as e:
+                    print("ACCESS  " + e.msg)
+                    Log("root", e.msg)
 
                 msgToCurrUser = "SUCCESS!! GRANTED ACCESS TO TABLE " + str(tableName) + " by USER: " + str(userName)
                 print(str(currUser) + ": " + msgToCurrUser)
@@ -188,14 +210,37 @@ def GRANT_ALL(mydb, cursor, currUser, tableName, userName, host, grantOption):
             print (str(currUser) + " : " + e.msg)
             Log(currUser, e.msg)
 
-def REVOKE_ALL(cursor, tableName, newUser, host):
-    try:
-        granting = "REVOKE ALL PRIVILEGES ON *.'%s' FROM '%s'@'%s'" % (tableName, newUser, host)
-        results = cursor.execute(granting)
-        print ("Revoking of privileges returned", results)
+def REVOKE_ALL(mydb, cursor, currUser, userName, tableName):
+        granteeList, grantBitList = GET_ALL_GRANTEES(cursor, "ACCESS", currUser, tableName)
 
-    except mysql.connector.Error as e:
-        print(e.msg)
+        if (len(granteeList) == 0):
+            print("Warning!! User " + str(currUser) + " has NOT granted access to user " + str(userName) +" for table " + str(tableName) + " in the first place. ")
+            return
+        else:
+            REVOKE_ALL_ITER(mydb, cursor, currUser, userName, tableName)
+            print("1. Delete " + str(currUser) + " " + str(userName))
+
+
+def REVOKE_ALL_ITER(mydb, cursor, currUser, userName, tableName):
+
+    granteeList, grantBitList = GET_ALL_GRANTEES(cursor, "ACCESS", userName, tableName)
+
+    # If userName has no other neighbors, simply delete the link <currUser, userName>
+    if (len(granteeList) == 0):
+        # print("2: Delete entry " + str(currUser) + " " + str(userName))
+        return
+
+    else:
+        print("Neighbors for " + str(userName) + " are: " + str(granteeList))
+        for index in range(len(granteeList)):
+
+            if (grantBitList[index] == '0'):
+                print("3: Delete entry " + str(userName) + " " + str(granteeList[index]))
+
+            else:
+                REVOKE_ALL_ITER(mydb, cursor,  userName, granteeList[index], tableName)
+                print ("4. Delete " + str(userName) + " " +  str(granteeList[index]))
+                # DELETE_USER_FROM_ACCESS(mydb, cursor, userName, str(granteeList[index]), tableName)
 
 def INSERT_INTO_FORBIDDEN(mydb, cursor, userName, tableName, firstAttempt):
     rowCount = CHECK_IF_USER_EXISTS(cursor, "ASSIGNED", tableName, userName)
@@ -288,15 +333,62 @@ def DELETE_USER_FROM_ACCESS(mydb, cursor, currUser, userName, tableName):
         print(currUser + " : Error - DELETE ACCESS " + e.msg)
         Log(currUser, " : Error - DELETE ACCESS " + e.msg)
 
-def UPDATE_TABLE(mydb, cursor, currUser, userName, tableName):
+def UPDATE_ASSIGNED_TABLE(mydb, cursor, currUser, userName, tableName):
     try:
         query = "UPDATE ASSIGNED SET grantBit = '1' where userName = '%s' and tableName = '%s'" % (
             userName, tableName)
         cursor.execute(query)
-        msg = " SUCCESS!! User: " + currUser + " updated table "  + tableName + " for user " + userName
+        msg = " SUCCESS!! User: " + currUser + " updated ASSIGNED table "  + tableName + " for user " + userName
         print(currUser + msg)
         Log(currUser, msg)
         mydb.commit()
     except mysql.connector.Error as e:
         print(currUser +" : Error - UPDATE " + e.msg)
         Log(currUser, " : Error - UPDATE " + e.msg)
+
+def  UPDATE_ACCESS_TABLE(mydb, cursor, currUser, userName, tableName):
+    try:
+        query = "UPDATE ACCESS SET grantBit = '1' where grantorName = '%s' and granteeName = '%s' and tableName = '%s'" % (
+            currUser, userName, tableName)
+        cursor.execute(query)
+        msg = " SUCCESS!! User: " + currUser + " updated ACCESS table "  + tableName + " for user " + userName
+        print(currUser + msg)
+        Log(currUser, msg)
+        mydb.commit()
+    except mysql.connector.Error as e:
+        print(currUser +" : Error - UPDATE " + e.msg)
+        Log(currUser, " : Error - UPDATE " + e.msg)
+
+def GET_ALL_GRANTEES(cursor, extantTable, userName, tableName):
+    try:
+        granteeList = []
+        grantBitList = []
+        query = "SELECT granteeName, grantBit FROM %s where grantorName = '%s' and tableName = '%s'" %(extantTable, userName, tableName)
+        cursor.execute(query)
+
+        rows = cursor.fetchall()
+        for row in rows:
+            granteeList.append(str(row[0]))
+            grantBitList.append(str(row[1]))
+
+    except mysql.connector.Error as e:
+        print(e.msg)
+        Log("root: ", e.msg)
+    return granteeList, grantBitList
+
+def GET_ALL_GRANTORS(cursor, extantTable, userName, tableName):
+    try:
+        grantorList = []
+        grantBitList = []
+        query = "SELECT grantorName, grantBit FROM %s where granteeName = '%s' and tableName = '%s'" %(extantTable, userName, tableName)
+        cursor.execute(query)
+
+        rows = cursor.fetchall()
+        for row in rows:
+            grantorList.append(str(row[0]))
+            grantBitList.append(str(row[1]))
+
+    except mysql.connector.Error as e:
+        print(e.msg)
+        Log("root: ", e.msg)
+    return grantorList, grantBitList
