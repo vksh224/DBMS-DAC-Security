@@ -186,3 +186,6 @@ Dexter:  SUCCESS!! User: Dexter updated ASSIGNED table CLIENT for user Sajjad
 Dexter:  SUCCESS!! User: Dexter updated ACCESS table CLIENT for user Sajjad
 Dexter:  SUCCESS!! User: Dexter updated ASSIGNED table CLIENT for user Sajjad
 Dexter:  SUCCESS!! User: Dexter updated ACCESS table CLIENT for user Sajjad
+Marek:  SUCCESS!! Entry for Baxter for CLIENT is successfully deleted from ASSIGNED
+Marek:  SUCCESS!! Entry for Baxter for CLIENT is successfully added to ASSIGNED
+Marek:  SUCCESS!! User: Marek updated ACCESS table CLIENT for user Baxter

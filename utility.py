@@ -195,45 +195,59 @@ def GRANT_ALL(mydb, cursor, currUser, tableName, userName, host, grantOption):
                     print("ACCESS  here: " + e.msg)
                     Log("root", e.msg)
 
-                # msgToCurrUser = "SUCCESS!! GRANTED ACCESS TO TABLE " + str(tableName) + " by USER: " + str(userName)
-                # print(str(currUser) + ": " + msgToCurrUser)
-                # Log(currUser, msgToCurrUser)
-
         except mysql.connector.Error as e:
             print (str(currUser) + " : " + e.msg)
             Log(currUser, e.msg)
 
 def REVOKE_ALL(mydb, cursor, currUser, userName, tableName):
-        granteeList, grantBitList = GET_ALL_GRANTEES(cursor, "ACCESS", currUser, tableName)
+        rowCount, grantBit = CHECK_IF_GRANTED_ACCESS(cursor, "ACCESS", currUser, userName, tableName)
 
-        if (len(granteeList) == 0):
-            print("Warning!! User " + str(currUser) + " has NOT granted access to user " + str(userName) +" for table " + str(tableName) + " in the first place. ")
+        if (rowCount == '0'):
+            print("\nCASE 1: Warning!! User " + str(currUser) + " has NOT granted access to user " + str(userName) +" for table " + str(tableName) + " in the first place. ")
             return
         else:
-            REVOKE_ALL_ITER(mydb, cursor, currUser, userName, tableName)
-            print("1. Delete " + str(currUser) + " " + str(userName))
+            if grantBit == '0':
+                print ("User " + str(currUser) + " did not gave GRANT OPTION to " + str(userName) + ". Safe to delete the link." )
+                print ("\nCASE 2: Delete <" + str(currUser) + " , "  + str(userName) +" , 0> from ACCESS TABLE")
+                HANDLE_ASSIGNED(mydb, cursor, currUser, userName, tableName)
+                return
+            else:
 
+                REVOKE_ALL_ITER(mydb, cursor, currUser, userName, tableName)
+                print("\nCASE 4. Delete <" + str(currUser) + " , " + str(userName) +" , 1> from ACCESS TABLE ")
+                HANDLE_ASSIGNED(mydb, cursor, currUser, userName, tableName)
 
 def REVOKE_ALL_ITER(mydb, cursor, currUser, userName, tableName):
+    # Check if any other grantor with grantBit = 1
+    rowCount = CHECK_IF_OTHER_GRANTOR_EXISTS(cursor, "ACCESS", currUser, userName, tableName, '1')
+
+    # If another grant provided GRANT OPTION TO userName
+    if rowCount > '0':
+        print("\nThere exists another grantor WITH GRANT OPTION. No need to make any additional changes.")
+        return
 
     granteeList, grantBitList = GET_ALL_GRANTEES(cursor, "ACCESS", userName, tableName)
 
     # If userName has no other neighbors, simply delete the link <currUser, userName>
     if (len(granteeList) == 0):
-        # print("2: Delete entry " + str(currUser) + " " + str(userName))
         return
 
     else:
-        print("Neighbors for " + str(userName) + " are: " + str(granteeList))
+
         for index in range(len(granteeList)):
+            print("\nNeighbors for " + str(userName) + " are: " + str(granteeList[index]))
 
             if (grantBitList[index] == '0'):
-                print("3: Delete entry " + str(userName) + " " + str(granteeList[index]))
+                print("\nUser " + str(userName) + " did not gave GRANT OPTION to " + str(
+                    granteeList[index]) + ". Safe to delete the link.")
+                print("\nCASE 3: Delete entry <" + str(userName) + " , " + str(granteeList[index]) + ", 0 > from ACCESS TABLE")
+                HANDLE_ASSIGNED(mydb, cursor, userName, str(granteeList[index]), tableName)
+                return
 
             else:
                 REVOKE_ALL_ITER(mydb, cursor,  userName, granteeList[index], tableName)
-                print ("4. Delete " + str(userName) + " " +  str(granteeList[index]))
-                # DELETE_USER_FROM_ACCESS(mydb, cursor, userName, str(granteeList[index]), tableName)
+                print ("\nCASE 4. Delete <" + str(userName) + " , " +  str(granteeList[index]) + ", 1> from ACCESS TABLE")
+                HANDLE_ASSIGNED(mydb, cursor, userName, str(granteeList[index]), tableName)
 
 def INSERT_INTO_FORBIDDEN(mydb, cursor, userName, tableName, firstAttempt):
     rowCount = CHECK_IF_USER_EXISTS(cursor, "ASSIGNED", tableName, userName)
@@ -352,6 +366,35 @@ def  UPDATE_ACCESS_TABLE(mydb, cursor, currUser, userName, tableName, grantOptio
         print(currUser +" : Error - UPDATE ACCESS " + e.msg)
         Log(currUser, " : Error - UPDATE ACCESS " + e.msg)
 
+
+def CHECK_IF_OTHER_GRANTOR_EXISTS(cursor, extantTable, currUser, userName, tableName, grantOption):
+    try:
+        query = "SELECT count(*) FROM %s where grantorName != '%s' and granteeName = '%s' and tableName = '%s' and grantBit = %s" %(extantTable, currUser, userName, tableName, grantOption)
+        #print("Query " + query)
+        cursor.execute(query)
+
+        row = cursor.fetchone()
+        #print("CHECK_IF_OTHER_GRANTOR_EXISTS "  + str(row[0]))
+    except mysql.connector.Error as e:
+        print(e.msg)
+        Log("root: ", e.msg)
+    return str(row[0])
+
+def CHECK_IF_GRANTED_ACCESS(cursor, extantTable, currUser, userName, tableName):
+
+    try:
+        query = "SELECT count(*), grantBit FROM %s where grantorName = '%s' and granteeName = '%s' and tableName = '%s'" %(extantTable, currUser, userName, tableName)
+        #print("Query: "  + query)
+        cursor.execute(query)
+
+        row = cursor.fetchone()
+        #print ("Check if granted access: " + str(row[0]) + " " + str(row[1]))
+
+    except mysql.connector.Error as e:
+        print(e.msg)
+        Log("root: ", e.msg)
+    return str(row[0]), str(row[1])
+
 def GET_ALL_GRANTEES(cursor, extantTable, userName, tableName):
     try:
         granteeList = []
@@ -385,3 +428,20 @@ def GET_ALL_GRANTORS(cursor, extantTable, userName, tableName):
         print(e.msg)
         Log("root: ", e.msg)
     return grantorList, grantBitList
+
+def HANDLE_ASSIGNED(mydb, cursor, currUser, userName, tableName):
+    rowWithGrantOptionCount = CHECK_IF_OTHER_GRANTOR_EXISTS(cursor, "ACCESS", currUser, userName, tableName, '1')
+    if rowWithGrantOptionCount > '0':
+        #UPDATE_ASSIGNED_TABLE(mydb, cursor, currUser, userName, tableName, '1')
+        print("Update entry <" + str(userName) + " , " + str(tableName) + " , 1> in ASSIGNED Table" )
+    else:
+        rowWithNoGrantOptionCount = CHECK_IF_OTHER_GRANTOR_EXISTS(cursor, "ACCESS", currUser, userName, tableName, '0')
+
+        if rowWithNoGrantOptionCount > '0':
+            # UPDATE_ASSIGNED_TABLE(mydb, cursor, currUser, userName, tableName, '0')
+            print("Update entry <" + str(userName) + " , " + str(tableName) + " , 0> in ASSIGNED Table")
+        else:
+            # DELETE_USER_FROM_ASSIGNED(mydb, cursor, currUser, userName, tableName)
+            print("Delete entry <" + str(userName) + " , " + str(tableName) + "> from ASSIGNED Table")
+
+
