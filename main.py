@@ -2,22 +2,6 @@ import mysql.connector
 from Log import *
 from utility import *
 
-#https://www.packtpub.com/books/content/granting-access-mysql-python
-
-# =========== ASSUMPTIONS ==============
-# 1. Every user has access to the database
-# 2. We have 5 users: Marek, Dexter, Baxter, Vijay, Sajjad
-# 3. Marek creates Table "CLIENT"
-# 4. Marek -> Dexter (with GRANT option)
-# 5. Marek -> Baxter (with NO GRANT option)
-# 6. Dexter -> Vijay (with GRANT option)
-
-# 7. Command 1: Vijay wants to give GRANT to Sajjad (for CLIENT) - GRANT
-# 8. Command 2: Dexter wants to revoke for Vijay (for CLIENT)    - REVOKE
-# 9. Command 3: SO adds Dexter to Forbidden
-# 10. Run commands GRANT and REVOKE, again
-
-
 # ================ PROGRAM STARTS HERE ==================
 
 hostV = 'localhost'
@@ -79,9 +63,10 @@ try:
         print("8. SHOW FORBIDDEN")
         print("9. Exit \n")
 
-        firstAttempt = 0
+        firstAttempt = 1
+        prevUserName = "dummy"
         while (1):
-            inputV = input("Command: ")
+            inputV = input("\nCommand: ")
 
             if inputV == 'GRANT' or inputV == 'grant':
                 print(" \n ===  GRANT ALL PRIVILEGES ==== \n")
@@ -101,8 +86,14 @@ try:
             elif inputV == 'ADD' or inputV == 'add':
                 userName = input("User name: ")
                 tableName = input("Table name: ")
-                firstAttempt = firstAttempt + 1
-                INSERT_INTO_FORBIDDEN(mydb, cursor, userName, tableName, firstAttempt)
+
+                if prevUserName == userName:
+                    firstAttempt = firstAttempt + 1
+                else:
+                    prevUserName = userName
+                    firstAttempt = 1
+                # print(str(firstAttempt) + " " + prevUserName + " " + userName)
+                eHANDLE_FORBIDDEN(mydb, cursor, userName, tableName, firstAttempt)
 
             elif inputV == 'DELETE' or inputV == 'delete':
                 print(" \n ===  DELETE USER FROM FORBIDDEN ==== \n")
@@ -121,7 +112,7 @@ try:
                 newUser = input("Username: ")
                 newPasswd = input("Password: ")
                 # grantOption = input("grant option? (Y/N) ")
-                CREATE_NEW_USER(cursor, hostV, newUser, newPasswd, grantOption)
+                CREATE_NEW_USER(cursor, hostV, newUser, newPasswd)
                 print ("======== END =========== \n")
 
             elif inputV == 'DROP' or inputV == 'drop':
@@ -179,7 +170,6 @@ try:
                 tableName = input("Table name: ")
                 SHOW_TABLE(cursor, tableName, userV)
                 print("======== END =========== \n")
-
 
             elif inputV == 'EXIT' or inputV == 'exit':
                 break
